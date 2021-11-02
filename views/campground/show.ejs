@@ -1,4 +1,5 @@
 <% layout('layouts/boilerplate') -%>
+    <link rel="stylesheet" href="/stylesheets/stars.css">
 
     <div class="row">
         <div class="col-6 d-flex justify-content-center">
@@ -36,32 +37,54 @@
                 <% if(currentUser) {%>
                     <h6>Leave a Review</h6>
                     <div class="mb-3">
-                        <label class="form-label" for="rating">Rating</label>
-                        <input class="form-range" type="range" name="review[rating]" id="rating" min="1" step="1"
-                            max="5">
-                        <div>
-                            <label class="form-label" for="body">Review</label>
-                            <textarea class="form-control" name="review[body]" id="body" cols="80" rows="5"
-                                required></textarea>
-                            <div class="valid-feedback">
-                                Looks good!
+                        <!-- <label class="form-label" for="rating">Rating</label> -->
+                        <!-- <input class="form-range" type="range" name="review[rating]" id="rating" min="1" step="1"
+                            max="5"> -->
+                        <div class="mb-3">
+                            <fieldset class="starability-basic">
+                                <input type="radio" id="no-rate" class="input-no-rate" name="review[rating]" value="1"
+                                    checked aria-label="No rating." />
+                                <input type="radio" id="first-rate1" name="review[rating]" value="1" />
+                                <label for="first-rate1" title="Terrible">1 star</label>
+                                <input type="radio" id="first-rate2" name="review[rating]" value="2" />
+                                <label for="first-rate2" title="Not good">2 stars</label>
+                                <input type="radio" id="first-rate3" name="review[rating]" value="3" />
+                                <label for="first-rate3" title="Average">3 stars</label>
+                                <input type="radio" id="first-rate4" name="review[rating]" value="4" />
+                                <label for="first-rate4" title="Very good">4 stars</label>
+                                <input type="radio" id="first-rate5" name="review[rating]" value="5" />
+                                <label for="first-rate5" title="Amazing">5 stars</label>
+                            </fieldset>
+
+                            <div>
+                                <label class="form-label" for="body">Review</label>
+                                <textarea class="form-control" name="review[body]" id="body" cols="80" rows="5"
+                                    required></textarea>
+                                <div class="valid-feedback">
+                                    Looks good!
+                                </div>
                             </div>
                         </div>
+                        <div class="mb-3">
+                            <button class="btn btn-success">Submit</button>
+                        </div>
+                        <% } %>
                     </div>
-                    <div class="mb-3">
-                        <button class="btn btn-success">Submit</button>
-                    </div>
-                    <% } %>
             </form>
             <% for (let review of campground.reviews) {%>
                 <div class="mb-3 card">
                     <div class="card-body">
                         <h6 class="card-title">
-                            Rating: <%= review.rating %>
-                        </h6>
-                        <h6 class="card-subtitle mb-2 text-muted">
                             @<%= review.author.username %>
                         </h6>
+                        <!-- <h5>&#9733;&#9733;&#9733;&#9733;&#9734;</h5> -->
+                        <p class="starability-result" data-rating=<%=review.rating %> >
+                            Rated: 3 stars
+                        </p>
+                        <!-- 
+                        <h6 class="card-subtitle mb-2 text-muted">
+                            @<%= review.author.username %>
+                        </h6> -->
                         <p class="card-text">
                             Review: <%= review.body %>
                         </p>
