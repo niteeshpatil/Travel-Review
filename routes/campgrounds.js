@@ -7,8 +7,6 @@ const campgrounds = require('../controllers/campgrounds');
 
 
 const multer = require('multer')
-
-
 const { storage } = require('../cloudinary');
 const upload = multer({ storage });
 
@@ -16,6 +14,7 @@ const upload = multer({ storage });
 router.route('/')
     .get(catchAsync(campgrounds.index))
     // .post(isloggedIn, validateCampground, catchAsync(campgrounds.createCampground))
+
     .post(upload.array('image'), (req, res) => {
         console.log(req.body, req.files);
         res.send("it worked?!")
