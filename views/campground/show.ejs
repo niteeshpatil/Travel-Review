@@ -54,6 +54,7 @@
             </div>
         </div>
         <div class="col-6 justify-content-center">
+            <div id='map' style='width: 400px; height: 300px;'></div>
             <form action="/campgrounds/<%= campground._id %>/reviews" method="POST" class="validated-form" novalidate>
                 <% if(currentUser) {%>
                     <h6>Leave a Review</h6>
@@ -117,7 +118,17 @@
                             <% } %>
                     </div>
                 </div>
-                <div class="w-100"></div>
                 <% } %>
         </div>
     </div>
+
+
+
+    <script>
+        const maptoken = '<%- process.env.MAPBOX_TOKEN%>';
+        const campData = `<%-campground.geometry.coordinates  %>`.split(',');
+        const lt = '<%- campground.title%>';
+        const lc = '<%- campground.location %>';
+    </script>
+
+    <script src="/js/showPageMap.js"></script>
