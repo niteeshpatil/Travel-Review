@@ -12,6 +12,9 @@ ImageSchema.virtual('thumbnail').get(function () {
 });
 
 
+const opts = { toJSON: { virtuals: true } };
+
+
 const CampgroundSchema = new mongoose.Schema({
     title: String,
     images: [ImageSchema],
@@ -39,6 +42,11 @@ const CampgroundSchema = new mongoose.Schema({
             ref: 'Review'
         }
     ]
+}, opts);
+
+CampgroundSchema.virtual('properties.popUpMarkup').get(function () {
+    return `<strong><a href="/campgrounds/${this._id}">${this.title}</a><strong>
+    <p>${this.description.substring(0, 20)}...</p>`
 });
 
 CampgroundSchema.post('findOneAndDelete', async function (doc) {
