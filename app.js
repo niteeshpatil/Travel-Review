@@ -21,20 +21,63 @@ const passport = require('passport');
 const localStrategy = require('passport-local');
 const User = require('./models/user');
 const helmet = require('helmet');
-
-
 const campgroundsRoutes = require('./routes/campgrounds');
 const ReviewsRoutes = require('./routes/reviews');
 const UserRoutes = require('./routes/users');
+const MongoStore = require('connect-mongo');
+
+
 const dbUrl = 'mongodb://localhost:27017/yelp-camp';
+
+
 
 
 const mongoSanitize = require('express-mongo-sanitize');
 const { default: contentSecurityPolicy } = require('helmet/dist/middlewares/content-security-policy');
 
+mongoose.connect(dbUrl, {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false
+});
+
+
+const db = mongoose.connection;
+db.on("error", console.error.bind(console, "connection error:"));
+db.once("open", () => {
+    console.log("Database connected");
+});
+
+
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'))
+app.use(express.urlencoded({ extended: true }))
+app.use(methodOverride('_method'));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(mongoSanitize({
+    replaceWith: '_'
+}))
+
+const secret = "thisissecret!";
+
+const store = MongoStore.create({
+    mongoUrl: dbUrl,
+    secret,
+    touchAfter: 24 * 60 * 60,
+    crypto: {
+        secret,
+    }
+});
+
+store.on("error", function (e) {
+    console.log("SESSION STORE ERROR", e)
+})
+
 const sessionConfig = {
+    store,
     name: 'session',
-    secret: "thisissecret!",
+    secret,
     resave: false,
     saveinitinalized: true,
     cookie: {
@@ -47,18 +90,8 @@ const sessionConfig = {
 
 // 'mongodb://localhost:27017/yelp-camp'
 
-mongoose.connect(dbUrl, {
-    useNewUrlParser: true,
-    useCreateIndex: true,
-    useUnifiedTopology: true,
-    useFindAndModify: false
-});
 
-const db = mongoose.connection;
-db.on("error", console.error.bind(console, "connection error:"));
-db.once("open", () => {
-    console.log("Database connected");
-});
+
 
 
 
@@ -132,25 +165,11 @@ app.use((req, res, next) => {
     next();
 })
 
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'))
-
-app.use(express.urlencoded({ extended: true }))
-app.use(methodOverride('_method'));
-
-
-
-
-app.use(express.static(path.join(__dirname, 'public')));
-
 
 app.use('/campgrounds', campgroundsRoutes);
 app.use('/campgrounds/:id/reviews', ReviewsRoutes);
 app.use('/', UserRoutes);
 
-app.use(mongoSanitize({
-    replaceWith: '_'
-}))
 
 
 
