@@ -1,7 +1,9 @@
 if (process.env.NODE_ENV !== "production") {
     require('dotenv').config();
 }
+// NODE_ENV =production node app.js
 
+// require('dotenv').config();
 
 
 
@@ -18,27 +20,34 @@ const flash = require('connect-flash');
 const passport = require('passport');
 const localStrategy = require('passport-local');
 const User = require('./models/user');
-
+const helmet = require('helmet');
 
 
 const campgroundsRoutes = require('./routes/campgrounds');
 const ReviewsRoutes = require('./routes/reviews');
-const UserRoutes = require('./routes/users')
+const UserRoutes = require('./routes/users');
+const dbUrl = 'mongodb://localhost:27017/yelp-camp';
+
+
+const mongoSanitize = require('express-mongo-sanitize');
+const { default: contentSecurityPolicy } = require('helmet/dist/middlewares/content-security-policy');
 
 const sessionConfig = {
+    name: 'session',
     secret: "thisissecret!",
     resave: false,
     saveinitinalized: true,
     cookie: {
         httpOnly: true,
+        // secure: true,
         expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
         maxAge: 1000 * 60 * 60 * 24 * 7
     }
 }
 
+// 'mongodb://localhost:27017/yelp-camp'
 
-
-mongoose.connect('mongodb://localhost:27017/yelp-camp', {
+mongoose.connect(dbUrl, {
     useNewUrlParser: true,
     useCreateIndex: true,
     useUnifiedTopology: true,
@@ -56,6 +65,58 @@ db.once("open", () => {
 
 app.use(session(sessionConfig));
 app.use(flash());
+app.use(helmet());
+
+
+const scriptSrcUrls = [
+    "https://stackpath.bootstrapcdn.com/",
+    "https://api.tiles.mapbox.com/",
+    "https://api.mapbox.com/",
+    "https://kit.fontawesome.com/",
+    "https://cdnjs.cloudflare.com/",
+    "https://cdn.jsdelivr.net",
+];
+const styleSrcUrls = [
+    "https://kit-free.fontawesome.com/",
+    "https://stackpath.bootstrapcdn.com/",
+    "https://api.mapbox.com/",
+    "https://api.tiles.mapbox.com/",
+    "https://fonts.googleapis.com/",
+    "https://use.fontawesome.com/",
+
+];
+const connectSrcUrls = [
+    "https://api.mapbox.com/",
+    "https://a.tiles.mapbox.com/",
+    "https://b.tiles.mapbox.com/",
+    "https://events.mapbox.com/",
+];
+const fontSrcUrls = [
+    "https://fonts.gstatic.com/s/",
+    "https://cdn.jsdelivr.net/",
+    "https://use.fontawesome.com/",
+];
+app.use(
+    helmet.contentSecurityPolicy({
+        directives: {
+            defaultSrc: [],
+            connectSrc: ["'self'", ...connectSrcUrls],
+            scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
+            styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
+            workerSrc: ["'self'", "blob:"],
+            objectSrc: [],
+            imgSrc: [
+                "'self'",
+                "blob:",
+                "data:",
+                "https://res.cloudinary.com/bengaluru/", //SHOULD MATCH YOUR CLOUDINARY ACCOUNT! 
+                "https://images.unsplash.com/",
+            ],
+            fontSrc: ["'self'", ...fontSrcUrls],
+        },
+    })
+);
+
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -82,16 +143,15 @@ app.use(methodOverride('_method'));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+
 app.use('/campgrounds', campgroundsRoutes);
 app.use('/campgrounds/:id/reviews', ReviewsRoutes);
 app.use('/', UserRoutes);
 
+app.use(mongoSanitize({
+    replaceWith: '_'
+}))
 
-app.get('/fakeUser', async (req, res) => {
-    const user = new User({ email: 'niteesh@gmail.com', username: 'nittti' })
-    const newUser = await User.register(user, '123');
-    res.send(newUser);
-})
 
 
 app.get('/', (req, res) => {
