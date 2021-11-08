@@ -5,13 +5,9 @@ if (process.env.NODE_ENV !== "production") {
 
 // require('dotenv').config();
 
-
-
 const express = require('express');
 const engine = require('ejs-mate');
 const path = require('path');
-const app = express();
-app.engine('ejs', engine);
 const mongoose = require('mongoose');
 const methodOverride = require('method-override');
 const ExpressError = require('./utils/ExpressError');
@@ -24,16 +20,12 @@ const helmet = require('helmet');
 const campgroundsRoutes = require('./routes/campgrounds');
 const ReviewsRoutes = require('./routes/reviews');
 const UserRoutes = require('./routes/users');
+const mongoSanitize = require('express-mongo-sanitize');
+const { default: contentSecurityPolicy } = require('helmet/dist/middlewares/content-security-policy');
 const MongoStore = require('connect-mongo');
 
 
 const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp';
-
-
-
-
-const mongoSanitize = require('express-mongo-sanitize');
-const { default: contentSecurityPolicy } = require('helmet/dist/middlewares/content-security-policy');
 
 mongoose.connect(dbUrl, {
     useNewUrlParser: true,
@@ -50,6 +42,8 @@ db.once("open", () => {
 });
 
 
+const app = express();
+app.engine('ejs', engine);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'))
 app.use(express.urlencoded({ extended: true }))
@@ -59,7 +53,8 @@ app.use(mongoSanitize({
     replaceWith: '_'
 }))
 
-const secret = "thisissecret!";
+
+const secret = process.env.SECRET || "thisissecret!";
 
 const store = MongoStore.create({
     mongoUrl: dbUrl,
@@ -89,10 +84,6 @@ const sessionConfig = {
 }
 
 // 'mongodb://localhost:27017/yelp-camp'
-
-
-
-
 
 
 
@@ -165,12 +156,9 @@ app.use((req, res, next) => {
     next();
 })
 
-
+app.use('/', UserRoutes);
 app.use('/campgrounds', campgroundsRoutes);
 app.use('/campgrounds/:id/reviews', ReviewsRoutes);
-app.use('/', UserRoutes);
-
-
 
 
 app.get('/', (req, res) => {
